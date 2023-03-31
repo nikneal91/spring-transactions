@@ -34,13 +34,24 @@ class HelloController {
 		return "Hello world";
 	}
 
-	@GetMapping("/02")
-	public String index02() throws Exception {
+	@GetMapping("/02a")
+	public String index02a() throws Exception {
 		service.createProductCheckException();
+		return "Hello world";
+	}
+	
+	@GetMapping("/02b")
+	public String index02b() throws Exception {
+		service.createProductRollback();
 		return "Hello world";
 	}
 
 	
+	@GetMapping("/03")
+	public String index03() throws Exception {
+		service.createProductHandledRuntime();
+		return "Hello world";
+	}
 
 }
 
@@ -67,7 +78,11 @@ class ProductService {
 		throw new RuntimeException();
 	}
 	
-	
+	/**
+	 * 02a
+	 * Service with checked exception doesnot rollback db
+	 * @throws Exception
+	 */
 	@Transactional
 	public void createProductCheckException() throws Exception{  
 	    System.out.println("------ createProduct ------");
@@ -78,6 +93,42 @@ class ProductService {
 	    productRepository.save(prod);
 	    System.out.println("Second Product inserted.");
 	    throw new SQLException();
+	}
+	
+	/**
+	 * 02b
+	 * for checked exception it is necessary to add rollbackFor in Transactional annotation
+	 * @throws Exception
+	 */
+	@Transactional( rollbackFor = SQLException.class)
+	public void createProductRollback() throws Exception{  
+	    System.out.println("------ createProduct ------");
+	    Product prod = new Product();
+	    prod.setDescription("This is an example with checked exception and transactional annotation with rollbackFor.");
+	    prod.setPrice(10d);
+	    prod.setTitle("Example 2b Product");
+	    productRepository.save(prod);
+	    System.out.println("Example 2b inserted.");
+	    throw new SQLException();
+	}
+	
+	/**
+	 * Handled Runtime Exception
+	 */
+	@Transactional
+	public void createProductHandledRuntime() {
+	    try {
+	        System.out.println("------ createProduct ------");
+	        Product prod = new Product();
+	        prod.setDescription("This is an example with runtime exception, transactional annotation and try catch.");
+	        prod.setPrice(10d);
+	        prod.setTitle("Example 3 Product");
+	        productRepository.save(prod);
+	        System.out.println("Example 3 Product inserted.");
+	        throw new RuntimeException();
+	    }catch (Exception e){
+	        System.out.println("Here we catch the exception.");
+	    }
 	}
 	
 	
