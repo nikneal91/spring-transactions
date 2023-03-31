@@ -1,5 +1,7 @@
 package com.example.springtransactions;
 
+import java.sql.SQLException;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,21 +28,34 @@ class HelloController {
 	@Autowired
 	private ProductService service;
  	
-	@GetMapping("/")
-	public String index() {
+	@GetMapping("/01")
+	public String index01() {
 		service.createProduct();
 		return "Hello world";
 	}
+
+	@GetMapping("/02")
+	public String index02() throws Exception {
+		service.createProductCheckException();
+		return "Hello world";
+	}
+
+	
+
 }
 
 
-@Transactional
+//02 after adding transactional rollbacks
 @Service
 class ProductService {
 
 	@Autowired
 	private ProductRepository productRepository;
 	
+	/**
+	 * 01 service without transactional doesnot rollback
+	 */
+	@Transactional
 	public void createProduct()  {
 		System.out.println("------ createProduct ------");
 		Product prod = new Product();
@@ -50,6 +65,19 @@ class ProductService {
 		productRepository.save(prod);
 		System.out.println("First Product inserted.");
 		throw new RuntimeException();
+	}
+	
+	
+	@Transactional
+	public void createProductCheckException() throws Exception{  
+	    System.out.println("------ createProduct ------");
+	    Product prod = new Product();
+	    prod.setDescription("This is an example with checked exception and transactional annotation.");
+	    prod.setPrice(10.0);
+	    prod.setTitle("Second Product");
+	    productRepository.save(prod);
+	    System.out.println("Second Product inserted.");
+	    throw new SQLException();
 	}
 	
 	
