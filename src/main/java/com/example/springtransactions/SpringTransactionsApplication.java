@@ -34,6 +34,7 @@ class HelloController {
 }
 
 
+@Transactional
 @Service
 class ProductService {
 
