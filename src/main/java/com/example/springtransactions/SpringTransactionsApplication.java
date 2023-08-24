@@ -1,12 +1,12 @@
 package com.example.springtransactions;
 
+import java.sql.Clob;
 import java.sql.SQLException;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -53,6 +53,13 @@ class HelloController {
 		return "Hello world";
 	}
 
+	@GetMapping("/test")
+	public String test() throws Exception {
+		service.testObject();
+		service.testGetObject();
+		return "Hello world";
+	}
+
 }
 
 
@@ -62,7 +69,10 @@ class ProductService {
 
 	@Autowired
 	private ProductRepository productRepository;
-	
+
+	@Autowired
+	private EntRepository entRepository;
+
 	/**
 	 * 01 service without transactional doesnot rollback
 	 */
@@ -130,11 +140,39 @@ class ProductService {
 	        System.out.println("Here we catch the exception.");
 	    }
 	}
-	
-	
+
+	@Transactional
+	public void testObject() {
+		try {
+			System.out.println("------ Test En ------");
+			Ent ent = new Ent();
+			entRepository.save(ent);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	@Transactional
+	public void testGetObject() {
+		try {
+			System.out.println("------ Test Get En ------");
+			Ent ent = entRepository.findById(1l).get();
+			En nn = new En(2l,"nikhil","a large character object");
+			ent.setObj(nn);
+			nn.setName("vipin");
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+
 }
 
 
+@Repository
+interface EntRepository extends JpaRepository<Ent, Long> {
+
+}
 
 @Repository
 interface ProductRepository extends JpaRepository<Product, Long> {
@@ -144,7 +182,6 @@ interface ProductRepository extends JpaRepository<Product, Long> {
 @Data
 @Entity
 class Product {
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
@@ -153,6 +190,33 @@ class Product {
 	private Double price;
 
 }
+
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Embeddable
+class En {
+	private Long enid;
+	private String name;
+
+	@Lob
+	private String warranty;
+}
+
+@Data
+@NoArgsConstructor
+@Entity
+class Ent {
+	@Id
+	@GeneratedValue
+	private Long id;
+
+	@Embedded
+	private En obj;
+}
+
+
 
 @SpringBootApplication
 @EnableJpaRepositories
@@ -167,8 +231,6 @@ public class SpringTransactionsApplication {
 @Component
 class MyBean implements CommandLineRunner {
 
-	
-	
 
 	public void run(String... args) throws RuntimeException {
 		System.out.println("do something here");
